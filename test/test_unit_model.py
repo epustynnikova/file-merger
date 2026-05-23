@@ -1,6 +1,6 @@
 import unittest
 
-from source.model.dto import StatusEnum, Source, Column
+from source.model.dto import StatusEnum, SourceItem, SourceColumn
 
 
 class ModelTests(unittest.TestCase):
@@ -8,8 +8,9 @@ class ModelTests(unittest.TestCase):
         # given:
         data = [
             ('Контракт', StatusEnum.CONTRACT),
-            ('Контракт_', None),
-            ('', StatusEnum.EMPTY)
+            ('Контракт_', StatusEnum.EMPTY),
+            ('', StatusEnum.EMPTY),
+            (None, StatusEnum.EMPTY)
         ]
 
         # when:
@@ -103,15 +104,14 @@ class ModelTests(unittest.TestCase):
 
     def test_source_status_compare(self):
         # given:
-        source = Source(
+        source = SourceItem(
             id='test-id',
-            status=StatusEnum.ALT_BASE,
-            columns=[Column(name='test-column', value='test-value')]
+            columns=[SourceColumn(name='test-column', value='test-value', status=StatusEnum.ALT_BASE)]
         )
         xls_status = StatusEnum.CLASSIFICATOR_AND_NEURAL
 
         # when:
-        need_to_refresh = source.status.need_to_refresh(xls_status)
+        need_to_refresh_test_column = source.columns[0].status.need_to_refresh(xls_status)
 
         # then:
-        self.assertTrue(need_to_refresh)
+        self.assertTrue(need_to_refresh_test_column)

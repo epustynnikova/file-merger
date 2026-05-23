@@ -1,25 +1,29 @@
 from dataclasses import dataclass
 from enum import Enum
-from typing import Union
 
 
 @dataclass(eq=True, order=True, unsafe_hash=True)
 class ReadingInfo:
     id_column_name: str
-    status_column_name: str
-    columns_for_copy: list[str]
+    columns_for_copy: list[ReadingColumn]
 
 
 @dataclass(eq=True, order=True, unsafe_hash=True)
-class Source:
+class ReadingColumn:
+    column_name: str
+    status_name: str
+
+
+@dataclass(eq=True, order=True, unsafe_hash=True)
+class SourceItem:
     id: str
-    status: StatusEnum
-    columns: list[Column]
+    columns: list[SourceColumn]
 
 
 @dataclass(eq=True, order=True, unsafe_hash=True)
-class Column:
+class SourceColumn:
     name: str
+    status: StatusEnum
     value: str
 
 
@@ -39,11 +43,11 @@ class StatusEnum(Enum):
         self.rate = rate
 
     @staticmethod
-    def search(value_from_xls: str) -> Union[StatusEnum, None]:
+    def search(value_from_xls: str) -> StatusEnum:
         for item in StatusEnum:
             if item.str_value == value_from_xls:
                 return item
-        return None
+        return StatusEnum.EMPTY
 
     def need_to_refresh(self, target):
         if self.rate <= 3:
