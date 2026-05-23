@@ -1,6 +1,6 @@
 import unittest
 
-from source.model.dto import StatusEnum, SourceItem, SourceColumn
+from source.model.dto import StatusEnum, SourceItem, SourceColumnData
 
 
 class ModelTests(unittest.TestCase):
@@ -106,7 +106,12 @@ class ModelTests(unittest.TestCase):
         # given:
         source = SourceItem(
             id='test-id',
-            columns=[SourceColumn(name='test-column', value='test-value', status=StatusEnum.ALT_BASE)]
+            id_name='test-name',
+            columns=[SourceColumnData(
+                name='test-column',
+                value='test-value',
+                status_name='test-status',
+                status=StatusEnum.ALT_BASE)]
         )
         xls_status = StatusEnum.CLASSIFICATOR_AND_NEURAL
 

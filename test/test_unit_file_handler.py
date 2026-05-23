@@ -4,8 +4,8 @@ import unittest
 
 import pandas as pd
 
-from source.merge.file_handler import XLSAndXLSXHandler, SourceFileHandler
-from source.model.dto import ReadingInfo, ReadingColumn, StatusEnum
+from source.application.file_handler import XLSAndXLSXHandler, SourceFileHandler
+from source.model.dto import ReadingInfo, ColumnToRead, StatusEnum
 from test.test_utils import get_file_source_path
 
 
@@ -48,12 +48,12 @@ class FileHandler(unittest.TestCase):
         reading_info = ReadingInfo(
             id_column_name='ID Позиции Базы',
             columns_for_copy=[
-                ReadingColumn('Вид', 'Статус вид'),
-                ReadingColumn('Производитель', 'Статус производитель'),
-                ReadingColumn('Направление', 'Статус направление'),
-                ReadingColumn('Прибор', 'Статус прибор'),
-                ReadingColumn('Параметр', 'Статус параметр'),
-                ReadingColumn('Артикул', 'Статус артикул')
+                ColumnToRead('Вид', 'Статус вид'),
+                ColumnToRead('Производитель', 'Статус производитель'),
+                ColumnToRead('Направление', 'Статус направление'),
+                ColumnToRead('Прибор', 'Статус прибор'),
+                ColumnToRead('Параметр', 'Статус параметр'),
+                ColumnToRead('Артикул', 'Статус артикул')
             ]
         )
         handler = SourceFileHandler(reading_info, file_path)

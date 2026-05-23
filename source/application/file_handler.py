@@ -1,6 +1,6 @@
 import pandas as pd
 
-from source.model.dto import ReadingInfo, SourceItem, StatusEnum, SourceColumn
+from source.model.dto import ReadingInfo, SourceItem, StatusEnum, SourceColumnData
 
 
 class XLSAndXLSXHandler:
@@ -34,12 +34,16 @@ class SourceFileHandler(XLSAndXLSXHandler):
             id_value = row[self.reading_info.id_column_name]
             columns_values = []
             for reading_column in self.reading_info.columns_for_copy:
-                columns_values.append(SourceColumn(
+                columns_values.append(SourceColumnData(
                     name=reading_column.column_name,
                     value=row[reading_column.column_name],
                     status=StatusEnum.search(row[reading_column.status_name]),
+                    status_name=reading_column.status_name
                 ))
-            source_items.append(SourceItem(id_value, columns_values))
+            source_items.append(SourceItem(
+                id=id_value,
+                id_name=row[self.reading_info.id_column_name],
+                columns=columns_values))
         return source_items
 
 

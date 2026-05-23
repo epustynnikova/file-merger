@@ -5,11 +5,11 @@ from enum import Enum
 @dataclass(eq=True, order=True, unsafe_hash=True)
 class ReadingInfo:
     id_column_name: str
-    columns_for_copy: list[ReadingColumn]
+    columns_for_copy: list[ColumnToRead]
 
 
 @dataclass(eq=True, order=True, unsafe_hash=True)
-class ReadingColumn:
+class ColumnToRead:
     column_name: str
     status_name: str
 
@@ -17,14 +17,16 @@ class ReadingColumn:
 @dataclass(eq=True, order=True, unsafe_hash=True)
 class SourceItem:
     id: str
-    columns: list[SourceColumn]
+    id_name: str
+    columns: list[SourceColumnData]
 
 
 @dataclass(eq=True, order=True, unsafe_hash=True)
-class SourceColumn:
+class SourceColumnData:
     name: str
-    status: StatusEnum
     value: str
+    status_name: str
+    status: StatusEnum
 
 
 class StatusEnum(Enum):
