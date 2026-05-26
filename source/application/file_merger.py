@@ -9,7 +9,8 @@ class TargetFileMerger:
     def merge(self,
               reading_info: ReadingInfo,
               id_to_source_item: dict[str, SourceItem],
-              should_save=True):
+              should_save=True,
+              saved_file_path = None):
         df = self.file_handler.read_file()
         for idx, row in df.iterrows():
             id_value = row[reading_info.id_column_name]
@@ -24,5 +25,5 @@ class TargetFileMerger:
                         df.loc[idx, source_column.name] = source_value
                         df.loc[idx, source_column.status_name] = source_status.str_value
         if should_save:
-            self.file_handler.save_df()
+            self.file_handler.save_df(saved_file_path)
         return df

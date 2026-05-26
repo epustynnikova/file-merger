@@ -1,4 +1,5 @@
 import pandas as pd
+from openpyxl import load_workbook
 
 from source.model.dto import ReadingInfo, SourceItem, StatusEnum, SourceColumnData
 
@@ -15,11 +16,22 @@ class XLSAndXLSXHandler:
 
     def save_df(self, file_name=None) -> str:
         if file_name is None:
-            self.df.to_excel(self.input_file_path, index=False)
-            return self.input_file_path
+            return self._save(self.input_file_path)
         else:
-            self.df.to_excel(file_name, index=False)
-            return file_name
+            return self._save(file_name)
+
+    def _save(self, file_name) -> str:
+        wb = load_workbook(self.input_file_path)
+        ws = wb.active
+        self.df.to_excel(file_name, index=False)
+        for r_idx, row in self.df.iterrows():
+            excel_row = r_idx + 2  # +2, т.к. pandas: 0 -> строка Excel 2 (если заголовок в строке 1)
+            for c_idx, value in enumerate(row):
+                excel_col = c_idx + 1
+                cell = ws.cell(row=excel_row, column=excel_col)
+                cell.value = value  # стиль остаётся прежним
+        wb.save(file_name)
+        return file_name
 
 
 class SourceFileHandler(XLSAndXLSXHandler):
