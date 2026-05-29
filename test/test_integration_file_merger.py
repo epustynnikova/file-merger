@@ -69,7 +69,6 @@ class FileHandlerIntegrationTest(unittest.TestCase):
                 self.assertIn(x_item.loc[i, column.column_name], b_item.loc[i, column.column_name])
                 self.assertIn(x_item.loc[i, column.status_name], b_item.loc[i, column.status_name])
 
-
     def test_merge_xlsx(self):
         # given:
         target_file_path = get_file_source_path(os.path.join('file_merger', 'integration_test_target.xlsx'))
@@ -255,6 +254,8 @@ class FileHandlerIntegrationTest(unittest.TestCase):
         target_file_path = get_file_source_path(os.path.join('file_merger', 'bin_target.xlsb'))
         source_file_path = get_file_source_path(os.path.join('file_merger', 'bin_source.xlsb'))
         saved_target_file_path = get_file_source_path(os.path.join('file_merger', 'saved_integration_test_target.xlsb'))
+        real_saved_target_file_path = get_file_source_path(
+            os.path.join('file_merger', 'saved_integration_test_target.xlsx'))
         reading_info = ReadingInfo(
             id_column_name='ID Позиции Базы',
             columns_for_copy=[
@@ -437,20 +438,23 @@ class FileHandlerIntegrationTest(unittest.TestCase):
         self.assertEqual(40, len(source_items))
         self.assertEqual(124, len(result))
 
+        saved_target_df = pd.read_excel(real_saved_target_file_path, engine="openpyxl")
+        saved_target_df.drop(saved_target_df.columns[saved_target_df.columns.str.contains('unnamed', case=False)],
+                             axis=1, inplace=True)
+
         target_df = pd.read_excel(target_file_path, dtype=str, keep_default_na=False, engine='pyxlsb')
         target_df.drop(target_df.columns[target_df.columns.str.contains('unnamed', case=False)], axis=1, inplace=True)
-
-        source_df = pd.read_excel(source_file_path, dtype=str, keep_default_na=False, engine='pyxlsb')
-        source_df.drop(target_df.columns[target_df.columns.str.contains('unnamed', case=False)], axis=1, inplace=True)
 
         self.assertEqual(len(result), len(target_df))
         for i in range(len(result)):
             for c in reading_info.columns_for_copy:
-                c_value_saved = result.loc[i, c.column_name]
+                c_value_result = result.loc[i, c.column_name]
+                c_value_saved = saved_target_df.loc[i, c.column_name]
                 c_value = target_df.loc[i, c.column_name]
+                self.assertTrue(c.column_name in expected_values[c_value_result != c_value][i])
                 self.assertTrue(c.column_name in expected_values[c_value_saved != c_value][i])
 
-        os.remove(saved_target_file_path)
+        os.remove(real_saved_target_file_path)
 
     def test_equals_result_xlsx_and_xlsb(self):
         # given:

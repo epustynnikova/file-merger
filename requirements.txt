@@ -5,3 +5,4 @@ toga
 openpyxl
 pyxlsb
 pyxlsbwriter
+spire.xls

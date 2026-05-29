@@ -1,6 +1,10 @@
+import os
+
 import pandas as pd
 from openpyxl import load_workbook
 from pyxlsbwriter import XlsbWriter
+from spire.xls import Workbook
+import re
 
 from source.model.dto import ReadingInfo, SourceItem, StatusEnum, SourceColumnData, InputFile, get_file_type, \
     FileTypeEnum
@@ -24,22 +28,32 @@ class ExcelHandler:
         if file_name is None:
             return self._save(self.input_file.path)
         else:
-            return self._save(file_name)
+            return self._save(file_name, delete_xlsb=False)
 
-    def _save(self, file_name) -> str:
+    def _save(self, file_name, delete_xlsb=True) -> str:
         if self.input_file.type in [FileTypeEnum.XLSX, FileTypeEnum.XLS]:
             return self._save_xls_xlsx(file_name)
         else:
-            return self._save_xlsb(file_name)
+            return self._save_xlsb(file_name, delete_xlsb)
 
-    def _save_xlsb(self, file_name):
-        data_for_writer = self.df.values.tolist()
-        data_for_writer.insert(0,  self.df.columns.tolist())  # Добавляем заголовки
-        data_as_strings = [[str(cell) for cell in row] for row in data_for_writer]
-        with XlsbWriter(file_name) as writer:
-            writer.add_sheet('My Sheet')
-            writer.write_sheet(data_as_strings)
-            writer.save()
+    def _save_xlsb(self, file_name, delete_xlsb):
+        # workbook = Workbook()
+        # workbook.LoadFromFile(self.input_file.path)
+        # worksheet = workbook.Worksheets[0]
+        xslx_file_name = re.sub(r'\.xlsb$', '.xlsx', file_name)
+        #
+        # for row_idx, row in self.df.iterrows():
+        #     excel_row = row_idx + 2
+        #     for col_idx, value in enumerate(row):
+        #         excel_col = col_idx + 1
+        #         cell = worksheet.Range[excel_row, excel_col]
+        #         cell.Value = value
+        #
+        # workbook.SaveToFile(xslx_file_name)
+        # workbook.Dispose()
+        self.df.to_excel(xslx_file_name, index=False)
+        if delete_xlsb:
+            os.remove(self.input_file.path)
         return file_name
 
     def _save_xls_xlsx(self, file_name) -> str:
