@@ -3,3 +3,5 @@ numpy
 pandas
 toga
 openpyxl
+pyxlsb
+pyxlsbwriter

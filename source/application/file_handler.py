@@ -1,27 +1,49 @@
 import pandas as pd
 from openpyxl import load_workbook
+from pyxlsbwriter import XlsbWriter
 
-from source.model.dto import ReadingInfo, SourceItem, StatusEnum, SourceColumnData
+from source.model.dto import ReadingInfo, SourceItem, StatusEnum, SourceColumnData, InputFile, get_file_type, \
+    FileTypeEnum
 
 
-class XLSAndXLSXHandler:
+class ExcelHandler:
     def __init__(self, input_file_path):
         self.df = None
-        self.input_file_path = input_file_path
+        self.input_file = InputFile(input_file_path, get_file_type(input_file_path))
 
     def read_file(self) -> pd.DataFrame:
-        self.df = pd.read_excel(self.input_file_path, dtype=str, keep_default_na=False, engine='openpyxl')
-        self.df.drop(self.df.columns[self.df.columns.str.contains('unnamed', case=False)], axis=1, inplace=True)
+        self.df = pd.read_excel(self.input_file.path,
+                                dtype=str,
+                                keep_default_na=False,
+                                engine=self.input_file.type.open_lib)
+        if self.input_file.type in [FileTypeEnum.XLSX, FileTypeEnum.XLS]:
+            self.df.drop(self.df.columns[self.df.columns.str.contains('unnamed', case=False)], axis=1, inplace=True)
         return self.df
 
     def save_df(self, file_name=None) -> str:
         if file_name is None:
-            return self._save(self.input_file_path)
+            return self._save(self.input_file.path)
         else:
             return self._save(file_name)
 
     def _save(self, file_name) -> str:
-        wb = load_workbook(self.input_file_path)
+        if self.input_file.type in [FileTypeEnum.XLSX, FileTypeEnum.XLS]:
+            return self._save_xls_xlsx(file_name)
+        else:
+            return self._save_xlsb(file_name)
+
+    def _save_xlsb(self, file_name):
+        data_for_writer = self.df.values.tolist()
+        data_for_writer.insert(0,  self.df.columns.tolist())  # Добавляем заголовки
+        data_as_strings = [[str(cell) for cell in row] for row in data_for_writer]
+        with XlsbWriter(file_name) as writer:
+            writer.add_sheet('My Sheet')
+            writer.write_sheet(data_as_strings)
+            writer.save()
+        return file_name
+
+    def _save_xls_xlsx(self, file_name) -> str:
+        wb = load_workbook(self.input_file.path)
         ws = wb.active
         self.df.to_excel(file_name, index=False)
         for r_idx, row in self.df.iterrows():
@@ -34,9 +56,9 @@ class XLSAndXLSXHandler:
         return file_name
 
 
-class SourceFileHandler(XLSAndXLSXHandler):
-    def __init__(self, reading_info: ReadingInfo, input_file_path):
-        super().__init__(input_file_path)
+class SourceFileHandler(ExcelHandler):
+    def __init__(self, reading_info: ReadingInfo, input_file):
+        super().__init__(input_file)
         self.reading_info = reading_info
 
     def read_file(self) -> list[SourceItem]:
@@ -59,8 +81,6 @@ class SourceFileHandler(XLSAndXLSXHandler):
         return source_items
 
 
-class TargetFileHandler(XLSAndXLSXHandler):
-    def __init__(self, input_file_path):
-        super().__init__(input_file_path)
-
-
+class TargetFileHandler(ExcelHandler):
+    def __init__(self, input_file):
+        super().__init__(input_file)

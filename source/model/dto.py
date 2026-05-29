@@ -29,6 +29,29 @@ class SourceColumnData:
     status: StatusEnum
 
 
+@dataclass(eq=True, order=True, unsafe_hash=True)
+class InputFile:
+    path: str
+    type: FileTypeEnum
+
+class FileTypeEnum(Enum):
+    XLSB = 'pyxlsb'
+    XLS = 'openpyxl'
+    XLSX = 'openpyxl'
+
+    def __init__(self, open_lib):
+        self.open_lib = open_lib
+
+def get_file_type(file_path: str) -> FileTypeEnum:
+    if file_path.endswith('.xlsx'):
+        return FileTypeEnum.XLSX
+    if file_path.endswith('.xls'):
+        return FileTypeEnum.XLS
+    if file_path.endswith('.xlsb'):
+        return FileTypeEnum.XLSB
+    raise TypeError(f"Unsupported file type: {file_path}")
+
+
 class StatusEnum(Enum):
     CONTRACT = ('Контракт', 1)
     MANUAL = ('Вручную', 2)
