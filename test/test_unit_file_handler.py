@@ -59,7 +59,6 @@ class FileHandler(unittest.TestCase):
         handler = ExcelHandler(file_path)
         df = handler.read_file()
         saved_file_name = str(time.time()) + "_test.xlsb"
-        real_saved_file_name = saved_file_name.replace(".xlsb", ".xlsx")
 
         # when:
         start_letter = 1
@@ -68,9 +67,9 @@ class FileHandler(unittest.TestCase):
 
         # then:
         handler.save_df(saved_file_name)
-        self.assertTrue(os.path.exists(real_saved_file_name))
+        self.assertTrue(os.path.exists(saved_file_name))
 
-        os.remove(real_saved_file_name)
+        os.remove(saved_file_name)
 
     def test_read_source(self):
         # given:
