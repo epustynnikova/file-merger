@@ -1,4 +1,5 @@
 import os
+import shutil
 import unittest
 
 import pandas as pd
@@ -249,6 +250,54 @@ class FileHandlerIntegrationTest(unittest.TestCase):
 
         os.remove(saved_target_file_path)
 
+    def test_merge_xlsx_without_extra_file(self):
+        # given:
+        copy_target_file_path = get_file_source_path(os.path.join('file_merger', 'copy_integration_test_target.xlsx'))
+        shutil.copy(get_file_source_path(os.path.join('file_merger', 'integration_test_target.xlsx')), copy_target_file_path)
+        source_file_path = get_file_source_path(os.path.join('file_merger', 'integration_test_source.xlsx'))
+        reading_info = ReadingInfo(
+            id_column_name='ID Позиции Базы',
+            columns_for_copy=[
+                ColumnToRead('Вид', 'Статус вид'),
+                ColumnToRead('Производитель', 'Статус производитель'),
+                ColumnToRead('Направление', 'Статус направление'),
+                ColumnToRead('Прибор', 'Статус прибор'),
+                ColumnToRead('Параметр', 'Статус параметр'),
+                ColumnToRead('Артикул', 'Статус артикул'),
+                ColumnToRead('Тест', 'Статус тест')
+            ]
+        )
+        target_file_merger = TargetFileMerger(TargetFileHandler(copy_target_file_path))
+        source_file_handler = SourceFileHandler(reading_info, source_file_path)
+        source_items = source_file_handler.read_file()
+        id_to_source_item = {source_item.id: source_item for source_item in source_items}
+
+
+        # when:
+        result = target_file_merger.merge(
+            reading_info=reading_info,
+            id_to_source_item=id_to_source_item,
+            should_save=True
+        )
+
+        # then:
+        self.assertEqual(40, len(source_items))
+        self.assertEqual(124, len(result))
+
+        self.assertTrue(os.path.exists(copy_target_file_path))
+        saved_target_df = pd.read_excel(copy_target_file_path, dtype=str, keep_default_na=False, engine='openpyxl')
+        saved_target_df.drop(saved_target_df.columns[saved_target_df.columns.str.contains('unnamed', case=False)],
+                             axis=1, inplace=True)
+
+        self.assertEqual(len(saved_target_df), len(result))
+        for i in range(len(saved_target_df)):
+            for c in reading_info.columns_for_copy:
+                c_value_saved = saved_target_df.loc[i, c.column_name]
+                c_value_result = result.loc[i, c.column_name]
+                self.assertTrue(c_value_result == c_value_saved)
+
+        os.remove(copy_target_file_path)
+
     def test_merge_xlsb(self):
         # given:
         target_file_path = get_file_source_path(os.path.join('file_merger', 'bin_target.xlsb'))
@@ -453,6 +502,58 @@ class FileHandlerIntegrationTest(unittest.TestCase):
                 c_value = target_df.loc[i, c.column_name]
                 self.assertTrue(c.column_name in expected_values[c_value_result != c_value][i])
                 self.assertTrue(c.column_name in expected_values[c_value_saved != c_value][i])
+
+        os.remove(real_saved_target_file_path)
+
+
+    def test_merge_xlsb_without_extra_file(self):
+        # given:
+        copy_target_file_path = get_file_source_path(os.path.join('file_merger', 'copy_bin_target.xlsb'))
+        source_file_path = get_file_source_path(os.path.join('file_merger', 'bin_source.xlsb'))
+        shutil.copy(get_file_source_path(os.path.join('file_merger', 'bin_target.xlsb')), copy_target_file_path)
+        real_saved_target_file_path = get_file_source_path(
+            os.path.join('file_merger', 'copy_bin_target.xlsx'))
+        reading_info = ReadingInfo(
+            id_column_name='ID Позиции Базы',
+            columns_for_copy=[
+                ColumnToRead('Вид', 'Статус вид'),
+                ColumnToRead('Производитель', 'Статус производитель'),
+                ColumnToRead('Направление', 'Статус направление'),
+                ColumnToRead('Прибор', 'Статус прибор'),
+                ColumnToRead('Параметр', 'Статус параметр'),
+                ColumnToRead('Артикул', 'Статус артикул'),
+                ColumnToRead('Тест', 'Статус тест')
+            ]
+        )
+        target_file_merger = TargetFileMerger(TargetFileHandler(copy_target_file_path))
+        source_file_handler = SourceFileHandler(reading_info, source_file_path)
+        source_items = source_file_handler.read_file()
+        id_to_source_item = {source_item.id: source_item for source_item in source_items}
+
+        # when:
+        result = target_file_merger.merge(
+            reading_info=reading_info,
+            id_to_source_item=id_to_source_item,
+            should_save=True
+        )
+
+        # then:
+        self.assertEqual(40, len(source_items))
+        self.assertEqual(124, len(result))
+
+        saved_target_df = pd.read_excel(real_saved_target_file_path, engine="openpyxl")
+        saved_target_df.drop(saved_target_df.columns[saved_target_df.columns.str.contains('unnamed', case=False)],
+                             axis=1, inplace=True)
+
+        self.assertTrue(os.path.exists(real_saved_target_file_path))
+        self.assertFalse(os.path.exists(copy_target_file_path))
+
+        self.assertEqual(len(result), len(saved_target_df))
+        for i in range(len(result)):
+            for c in reading_info.columns_for_copy:
+                c_value_result = result.loc[i, c.column_name]
+                c_value_saved = saved_target_df.loc[i, c.column_name]
+                self.assertTrue(c_value_saved == c_value_result)
 
         os.remove(real_saved_target_file_path)
 

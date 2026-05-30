@@ -2,8 +2,9 @@ import os
 
 import pandas as pd
 from openpyxl import load_workbook
-from pyxlsbwriter import XlsbWriter
-from spire.xls import Workbook
+from openpyxl import Workbook
+from openpyxl.styles import Font, PatternFill, Alignment
+from openpyxl.utils import get_column_letter
 import re
 
 from source.model.dto import ReadingInfo, SourceItem, StatusEnum, SourceColumnData, InputFile, get_file_type, \
@@ -37,21 +38,42 @@ class ExcelHandler:
             return self._save_xlsb(file_name, delete_xlsb)
 
     def _save_xlsb(self, file_name, delete_xlsb):
-        # workbook = Workbook()
-        # workbook.LoadFromFile(self.input_file.path)
-        # worksheet = workbook.Worksheets[0]
+        wb = Workbook()
+        ws = wb.active
+        header_font = Font(
+            name="Calibri",
+            size=11,
+            bold=False
+        )
+        header_fill = PatternFill(
+            fill_type="solid",
+            fgColor="D9EAD3"  # светло-зелёный как в файле
+        )
+        header_alignment = Alignment(
+            horizontal="center",
+            vertical="center"
+        )
+        for col_num, column_name in enumerate(self.df.columns, start=1):
+            cell = ws.cell(row=1, column=col_num, value=column_name)
+
+            cell.font = header_font
+            cell.fill = header_fill
+            cell.alignment = header_alignment
+        for row_num, row in enumerate(self.df.itertuples(index=False), start=2):
+            for col_num, value in enumerate(row, start=1):
+                ws.cell(row=row_num, column=col_num, value=value)
+
+        widths = [
+            17.71, 15, 17.86, 17.86, 17.86, 17.86, 17.86, 17.86, 17.86,
+            15, 15, 15, 15, 15, 15, 15, 15
+        ]
+        for col_idx, width in enumerate(widths, start=1):
+            col_letter = get_column_letter(col_idx)
+            ws.column_dimensions[col_letter].width = width
+
         xslx_file_name = re.sub(r'\.xlsb$', '.xlsx', file_name)
-        #
-        # for row_idx, row in self.df.iterrows():
-        #     excel_row = row_idx + 2
-        #     for col_idx, value in enumerate(row):
-        #         excel_col = col_idx + 1
-        #         cell = worksheet.Range[excel_row, excel_col]
-        #         cell.Value = value
-        #
-        # workbook.SaveToFile(xslx_file_name)
-        # workbook.Dispose()
-        self.df.to_excel(xslx_file_name, index=False)
+        wb.save(xslx_file_name)
+
         if delete_xlsb:
             os.remove(self.input_file.path)
         return file_name
