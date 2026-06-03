@@ -3,6 +3,6 @@ dist/
 **/*.log
 local_files/
 *.spec
-site_file_enricher.egg-info/
+file_merger.egg-info/
 .idea
 **/__pycache__/
