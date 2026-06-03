@@ -1,7 +1,5 @@
-import datetime
 import logging
 from asyncio import sleep
-from wsgiref.util import application_uri
 
 import toga
 from toga.app import App
@@ -17,12 +15,15 @@ class GuiApplication(toga.App):
 
     def __init__(self, formal_name, app_id):
         super().__init__(formal_name=formal_name, app_id=app_id)
-
-        self.file_name = ''
-
-        # objects
-        self.label = toga.Label("Приложение запущено.", style=Pack(margin_top=20))
-        self.progress_bar = toga.ProgressBar(max=100, value=0)
+        self.id_list = None
+        self.column_list = None
+        self.id_column = None
+        self.column_value = None
+        self.progress_bar = None
+        self.label = None
+        self.info_box = None
+        self.target_files = None
+        self.source_file = None
 
     async def exit_handler(self, app):
         App.exit(self)
@@ -34,7 +35,7 @@ class GuiApplication(toga.App):
         self.main_window = toga.MainWindow()
         self.on_exit = self.exit_handler
 
-        self.info_box = toga.MultilineTextInput(readonly=True, style=Pack(flex=1, margin_top=10), value = "Выберите файлы.\n")
+        self.info_box = toga.MultilineTextInput(readonly=True, style=Pack(flex=1, margin_top=10), value = "")
 
         self.label = toga.Label("Приложение запущено.", style=Pack(margin_top=10))
 
@@ -172,19 +173,19 @@ class GuiApplication(toga.App):
                     for item in self.column_list.value.split(",")
                     if item.strip()
                 ]
-                self.info_box.value += (f"Список колонок: {column_value}\n")
-                self.info_box.value += (f"Список ID: {self.id_column}\n")
+                self.label.text = "Запущена обработка"
                 self.progress_bar.value = 0
                 for i in range(0, 100):
                     await sleep(1)
                     self.progress_bar.value = i
+                    self.info_box.value += (f"Процент: {i}\n")
                     print(i)
-                self.label.text = f"Закончена обработка файла"
+                self.label.text = "Закончена обработка файла"
                 self.progress_bar.value = 100
                 self.column_list.readonly = False
                 self.id_list.readonly = False
         else:
-            await self.dialog(toga.InfoDialog("Внимание", f"Не закончена обработка файла"))
+            await self.dialog(toga.InfoDialog("Внимание", "Не закончена обработка файла"))
             self.label.text = "Предупреждение: не закончена обработка предыдущего файла"
 
     async def select_file_source(self, widget):
@@ -195,11 +196,11 @@ class GuiApplication(toga.App):
 
             if source_file_path is not None:
                 self.source_file = source_file_path
-                self.info_box.value += (f"Выбран исходный файл {self.source_file}\n")
+                self.label.text = f"Выбран исходный файл {self.source_file}\n"
         else:
             await self.dialog(toga.InfoDialog(
                 "Внимание",
-                f"Не закончена обработка файла"))
+                "Не закончена обработка файла"))
             self.label.text = "Предупреждение: не закончена обработка предыдущего файла"
 
     async def select_target_files(self, widget):
@@ -216,24 +217,24 @@ class GuiApplication(toga.App):
 
                 target_selected_text = "\n".join(
                     f"Выбран файл для записи: {file_path.name}"
-                    for file_path in self.target_files
-            )
-                self.info_box.value += target_selected_text + "\n"
+                    for file_path in self.target_files)
+                self.label.text = target_selected_text + "\n"
         else:
             await self.dialog(toga.InfoDialog(
                 "Внимание",
-                f"Не закончена обработка файла"))
+                "Не закончена обработка файлов"))
             self.label.text = "Предупреждение: не закончена обработка предыдущего файла"
 
     async def clear_paths(self, widget):
         if self.progress_bar.value in [0, 100]:
             self.source_file = None
             self.target_files = None
-            self.info_box.value += (f"Очищены пути к файлу-источнику и целевым файлам.\n")
+            self.info_box.value = ""
+            self.label.text = "Очищены пути к файлу-источнику и целевым файлам."
         else:
             await self.dialog(toga.InfoDialog(
                 "Внимание",
-                f"Не закончена обработка файла"))
+                "Не закончена обработка файлов"))
             self.label.text = "Предупреждение: не закончена обработка предыдущего файла"
 
     def exit(self, source_widget):
