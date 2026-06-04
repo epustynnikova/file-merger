@@ -6,6 +6,10 @@ from toga.app import App
 from toga.style import Pack
 from toga.style.pack import COLUMN, ROW
 
+from source.application.file_handler import SourceFileHandler, TargetFileHandler
+from source.application.file_merger import TargetFileMerger
+from source.model.dto import ColumnToRead, ReadingInfo
+
 logging.basicConfig(filename=f'excel-file-merger.log',
                     level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -174,13 +178,40 @@ class GuiApplication(toga.App):
                     if item.strip()
                 ]
                 self.label.text = "Запущена обработка"
+                self.info_box.value += f"ID колонка: ${self.id_column}\n"
+                self.info_box.value += f"Список колонок: ${column_value}\n"
                 self.progress_bar.value = 0
-                for i in range(0, 100):
-                    await sleep(1)
-                    self.progress_bar.value = i
-                    self.info_box.value += (f"Процент: {i}\n")
-                    print(i)
-                self.label.text = "Закончена обработка файла"
+
+                center = len(column_value) // 2
+                columns = []
+                for i in range(center + 1):
+                    columns.append(ColumnToRead(column_value[i], column_value[i+center]))
+                reading_info = ReadingInfo(
+                    id_column_name=self.id_column,
+                    columns_for_copy=columns,
+                )
+                logger.info(f"Parsed reading info: {reading_info}")
+                source_handler = SourceFileHandler(reading_info, str(self.source_file))
+                id_to_source_item = {source_item.id: source_item for source_item in source_handler.read_file()}
+                logger.info(f"Read {len(id_to_source_item.values())} source items")
+                logger.info(f"IDs: {len(id_to_source_item.keys())}")
+                files_count = 0
+                for file in self.target_files:
+                    try:
+                        logger.info(f"Processing file: {file}")
+                        target_file_path = str(file)
+                        file_merger = TargetFileMerger(TargetFileHandler(target_file_path))
+                        logger.info(f"Read file: {file}")
+                        file_merger.merge(reading_info, id_to_source_item)
+                        self.info_box.value += f"Обработан файл: {target_file_path}\n"
+                        logger.info(f"Finished processing file: {file}")
+                        files_count += 1
+                    except Exception as ex:
+                        self.info_box.value += f"В процессе обработки файла {target_file_path} произошла ошибка\n"
+                        logger.info(f"Finished processing file: {file} with exception: {ex}")
+                    self.progress_bar.value = round(100 * (files_count / len(self.target_files)))
+                    logger.info(f"From {len(self.target_files)} files handled {files_count} files, percentage: {self.progress_bar.value}%")
+                self.label.text = "Закончена обработка файлов"
                 self.progress_bar.value = 100
                 self.column_list.readonly = False
                 self.id_list.readonly = False
