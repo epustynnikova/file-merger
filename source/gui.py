@@ -228,12 +228,23 @@ class GuiApplication(toga.App):
         if not self.process_started:
             self.progress_bar.value = 0
             source_file_path = await self.dialog(
-                toga.OpenFileDialog("Choose a file")
+                toga.OpenFileDialog(
+                    title = "Choose a file",
+                    file_types = ["xls", "xlsx", "xlsb"]
+                )
             )
 
+            correct_file_types = [".xls", ".xlsx", ".xlsb"]
+
             if source_file_path is not None:
-                self.source_file = source_file_path
-                self.label.text = f"Выбран исходный файл {self.source_file}\n"
+                if source_file_path.suffix.lower() in correct_file_types:
+                    self.source_file = source_file_path
+                    self.label.text = f"Выбран исходный файл {self.source_file}\n"
+                else:
+                    await self.dialog(toga.InfoDialog(
+                        "Внимание",
+                        "Выберите файл Excel как исходный"))
+                    self.label.text = f"Предупреждение: Выберите файл Excel как исходный"
         else:
             await self.dialog(toga.InfoDialog(
                 "Внимание",
@@ -247,16 +258,28 @@ class GuiApplication(toga.App):
                 toga.OpenFileDialog(
                     title="Choose files",
                     multiple_select=True,
+                    file_types=["xls", "xlsx", "xlsb"]
                 )
             )
 
             if target_files_paths is not None:
-                self.target_files = target_files_paths
+                correct_file_types = [".xls", ".xlsx", ".xlsb"]
+                valid_type_flag = True
+                for file_path in target_files_paths:
+                    if file_path.suffix.lower() not in correct_file_types:
+                        valid_type_flag = False
+                if valid_type_flag:
+                        self.target_files = target_files_paths
 
-                target_selected_text = "\n".join(
-                    f"Выбран файл для записи: {file_path.name}"
-                    for file_path in self.target_files)
-                self.label.text = target_selected_text + "\n"
+                        target_selected_text = "\n".join(
+                            f"Выбран файл для записи: {file_path.name}"
+                            for file_path in self.target_files)
+                        self.label.text = target_selected_text + "\n"
+                else:
+                    await self.dialog(toga.InfoDialog(
+                        "Внимание",
+                        "Выберите только файлы Excel как целевые"))
+                    self.label.text = f"Предупреждение: Выберите только файлы Excel как целевые"
         else:
             await self.dialog(toga.InfoDialog(
                 "Внимание",
