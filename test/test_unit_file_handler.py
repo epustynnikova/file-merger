@@ -460,3 +460,19 @@ class FileHandler(unittest.TestCase):
                     expected_value_for_item[column.name][1],
                     column.value
                 )
+
+    def test_read_source_real(self):
+        # given:
+        file_path = get_file_source_path(os.path.join('file_handler', '25_Владельцы_анализаторов_обработка.xlsx'))
+        reading_info = ReadingInfo(
+            id_column_name='ID Позиции Базы',
+            columns_for_copy=[ColumnToRead(column_name='Вид', status_name='Артикул'),
+                              ColumnToRead(column_name='Направление', status_name='Статус вид'),
+                              ColumnToRead(column_name='Производитель', status_name='Статус направление'),
+                              ColumnToRead(column_name='Прибор', status_name='Статус прибор'),
+                              ColumnToRead(column_name='Параметр', status_name='Статус параметр'),
+                              ColumnToRead(column_name='Артикул', status_name='Статус артикул')]
+        )
+        handler = SourceFileHandler(reading_info, file_path)
+        df = handler.read_file()
+        print(df)

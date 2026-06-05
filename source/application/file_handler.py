@@ -1,11 +1,11 @@
 import os
+import re
 
 import pandas as pd
-from openpyxl import load_workbook
 from openpyxl import Workbook
+from openpyxl import load_workbook
 from openpyxl.styles import Font, PatternFill, Alignment
 from openpyxl.utils import get_column_letter
-import re
 
 from source.model.dto import ReadingInfo, SourceItem, StatusEnum, SourceColumnData, InputFile, get_file_type, \
     FileTypeEnum
@@ -100,20 +100,24 @@ class SourceFileHandler(ExcelHandler):
     def read_file(self) -> list[SourceItem]:
         super().read_file()
         source_items = []
+        real_columns_for_copy = []
         for idx, row in self.df.iterrows():
             id_value = row[self.reading_info.id_column_name]
             columns_values = []
-            for reading_column in self.reading_info.columns_for_copy:
-                columns_values.append(SourceColumnData(
-                    name=reading_column.column_name,
-                    value=row[reading_column.column_name],
-                    status=StatusEnum.search(row[reading_column.status_name]),
-                    status_name=reading_column.status_name
-                ))
+            for reading_column in self.reading_info.columns_for_copy :
+                if reading_column.column_name in row and reading_column.status_name in row:
+                    columns_values.append(SourceColumnData(
+                        name=reading_column.column_name,
+                        value=row[reading_column.column_name],
+                        status=StatusEnum.search(row[reading_column.status_name]),
+                        status_name=reading_column.status_name
+                    ))
+                    real_columns_for_copy.append(reading_column)
             source_items.append(SourceItem(
                 id=id_value,
                 id_name=row[self.reading_info.id_column_name],
                 columns=columns_values))
+        self.reading_info.columns_for_copy = real_columns_for_copy
         return source_items
 
 
