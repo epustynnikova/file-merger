@@ -1,6 +1,6 @@
 import unittest
 
-from source.model.dto import StatusEnum, SourceItem, SourceColumnData
+from source.model.dto import StatusEnum, SourceItem, SourceColumnData, search
 
 
 class ModelTests(unittest.TestCase):
@@ -16,7 +16,8 @@ class ModelTests(unittest.TestCase):
         # when:
         for str_value, status in data:
             # then:
-            self.assertEqual(StatusEnum.search(str_value), status)
+
+            self.assertEqual(search(str_value), status)
 
     def test_compare_status(self):
         # given:

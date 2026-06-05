@@ -8,7 +8,7 @@ from openpyxl.styles import Font, PatternFill, Alignment
 from openpyxl.utils import get_column_letter
 
 from source.model.dto import ReadingInfo, SourceItem, StatusEnum, SourceColumnData, InputFile, get_file_type, \
-    FileTypeEnum
+    FileTypeEnum, search
 
 
 class ExcelHandler:
@@ -109,7 +109,7 @@ class SourceFileHandler(ExcelHandler):
                     columns_values.append(SourceColumnData(
                         name=reading_column.column_name,
                         value=row[reading_column.column_name],
-                        status=StatusEnum.search(row[reading_column.status_name]),
+                        status=search(row[reading_column.status_name]),
                         status_name=reading_column.status_name
                     ))
                     real_columns_for_copy.append(reading_column)

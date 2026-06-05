@@ -1,5 +1,6 @@
 from source.application.file_handler import TargetFileHandler, SourceFileHandler
-from source.model.dto import ReadingInfo, StatusEnum, ColumnToRead
+from source.model.dto import ReadingInfo, StatusEnum, ColumnToRead, search
+
 
 def merge_all(column_values: list[str],
               id_column: str,
@@ -45,7 +46,7 @@ def merge_all(column_values: list[str],
                     for source_column in id_to_source_item[id_value].columns:
                         source_status = source_column.status
                         source_value = source_column.value
-                        target_status = StatusEnum.search(row[source_column.status_name])
+                        target_status = search(row[source_column.status_name])
                         target_value = row[source_column.name]
                         if source_status.need_to_refresh(target_status) and source_value != target_value:
                             logger.info(

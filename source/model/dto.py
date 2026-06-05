@@ -3,22 +3,15 @@ from enum import Enum
 
 
 @dataclass(eq=True, order=True, unsafe_hash=True)
-class ReadingInfo:
-    id_column_name: str
-    columns_for_copy: list[ColumnToRead]
-
-
-@dataclass(eq=True, order=True, unsafe_hash=True)
 class ColumnToRead:
     column_name: str
     status_name: str
 
 
 @dataclass(eq=True, order=True, unsafe_hash=True)
-class SourceItem:
-    id: str
-    id_name: str
-    columns: list[SourceColumnData]
+class ReadingInfo:
+    id_column_name: str
+    columns_for_copy: list[ColumnToRead]
 
 
 @dataclass(eq=True, order=True, unsafe_hash=True)
@@ -30,9 +23,11 @@ class SourceColumnData:
 
 
 @dataclass(eq=True, order=True, unsafe_hash=True)
-class InputFile:
-    path: str
-    type: FileTypeEnum
+class SourceItem:
+    id: str
+    id_name: str
+    columns: list[SourceColumnData]
+
 
 class FileTypeEnum(Enum):
     XLSB = 'pyxlsb'
@@ -41,6 +36,7 @@ class FileTypeEnum(Enum):
 
     def __init__(self, open_lib):
         self.open_lib = open_lib
+
 
 def get_file_type(file_path: str) -> FileTypeEnum:
     if file_path.endswith('.xlsx'):
@@ -67,14 +63,20 @@ class StatusEnum(Enum):
         self.str_value = str_value
         self.rate = rate
 
-    @staticmethod
-    def search(value_from_xls: str) -> StatusEnum:
-        for item in StatusEnum:
-            if item.str_value == value_from_xls:
-                return item
-        return StatusEnum.EMPTY
-
     def need_to_refresh(self, target):
         if self.rate <= 3:
             return self.rate <= target.rate
         return self.rate < target.rate
+
+
+def search(value_from_xls: str) -> StatusEnum:
+    for item in StatusEnum:
+        if item.str_value == value_from_xls:
+            return item
+    return StatusEnum.EMPTY
+
+
+@dataclass(eq=True, order=True, unsafe_hash=True)
+class InputFile:
+    path: str
+    type: FileTypeEnum
