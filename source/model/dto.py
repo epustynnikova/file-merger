@@ -13,6 +13,25 @@ class ReadingInfo:
     id_column_name: str
     columns_for_copy: list[ColumnToRead]
 
+class StatusEnum(Enum):
+    CONTRACT = ('Контракт', 1)
+    MANUAL = ('Вручную', 2)
+    AROUND = ('Примерно', 3)
+    SCROLLING = ('Скроллинг', 3)
+    ALT_BASE = ('Альтбаза', 3)
+    CLASSIFICATOR = ('Классификатор', 4)
+    NEURAL = ('Нейросеть', 4)
+    CLASSIFICATOR_AND_NEURAL = ('Классификатор и нейросеть', 4)
+    EMPTY = ('', 5)
+
+    def __init__(self, str_value, rate):
+        self.str_value = str_value
+        self.rate = rate
+
+    def need_to_refresh(self, target):
+        if self.rate <= 3:
+            return self.rate <= target.rate
+        return self.rate < target.rate
 
 @dataclass(eq=True, order=True, unsafe_hash=True)
 class SourceColumnData:
@@ -46,27 +65,6 @@ def get_file_type(file_path: str) -> FileTypeEnum:
     if file_path.endswith('.xlsb'):
         return FileTypeEnum.XLSB
     raise TypeError(f"Unsupported file type: {file_path}")
-
-
-class StatusEnum(Enum):
-    CONTRACT = ('Контракт', 1)
-    MANUAL = ('Вручную', 2)
-    AROUND = ('Примерно', 3)
-    SCROLLING = ('Скроллинг', 3)
-    ALT_BASE = ('Альтбаза', 3)
-    CLASSIFICATOR = ('Классификатор', 4)
-    NEURAL = ('Нейросеть', 4)
-    CLASSIFICATOR_AND_NEURAL = ('Классификатор и нейросеть', 4)
-    EMPTY = ('', 5)
-
-    def __init__(self, str_value, rate):
-        self.str_value = str_value
-        self.rate = rate
-
-    def need_to_refresh(self, target):
-        if self.rate <= 3:
-            return self.rate <= target.rate
-        return self.rate < target.rate
 
 
 def search(value_from_xls: str) -> StatusEnum:
