@@ -1,3 +1,4 @@
+import asyncio
 import logging
 
 import toga
@@ -5,8 +6,7 @@ from toga.app import App
 from toga.style import Pack
 from toga.style.pack import COLUMN, ROW
 
-from source.application.file_handler import SourceFileHandler, TargetFileHandler
-from source.model.dto import ColumnToRead, ReadingInfo, StatusEnum
+from source.application.process_handler import merge_all
 
 logging.basicConfig(filename=f'excel-file-merger.log',
                     level=logging.DEBUG)
@@ -26,6 +26,7 @@ class GuiApplication(toga.App):
         self.info_box = None
         self.target_files = None
         self.source_file = None
+        self.process_started = False
 
     async def exit_handler(self, app):
         App.exit(self)
@@ -161,7 +162,7 @@ class GuiApplication(toga.App):
         )
 
     async def action_start_script(self, widget):
-        if self.progress_bar.value in [0, 100]:
+        if not self.process_started:
             if self.source_file is None:
                 await self.dialog(toga.InfoDialog("Внимание", "Не выбран файл-источник"))
                 self.label.text = "Предупреждение: не выбран файл-источник"
@@ -180,75 +181,51 @@ class GuiApplication(toga.App):
                 self.info_box.value += f"ID колонка: ${self.id_column}\n"
                 self.info_box.value += f"Список колонок: ${column_value}\n"
                 self.progress_bar.value = 0
+                self.process_started = True
 
-                center = len(column_value) // 2
-                columns = []
-                for i in range(center + 1):
-                    columns.append(ColumnToRead(column_value[i], column_value[i + center]))
-                reading_info = ReadingInfo(
-                    id_column_name=self.id_column,
-                    columns_for_copy=columns,
+                await asyncio.to_thread(
+                    merge_all,
+                    column_values=column_value,
+                    id_column=self.id_column,
+                    source_file_path=str(self.source_file),
+                    target_files=[str(f) for f in self.target_files],
+                    logger=logger,
+                    progress_callback=self.update_progress,
+                    infobox_callback=self.update_infobox,
+                    end_handle_callback=self.end_handle
                 )
-                logger.info(f"Parsed reading info: {reading_info}")
-                source_handler = SourceFileHandler(reading_info, str(self.source_file))
-                id_to_source_item = {source_item.id: source_item for source_item in source_handler.read_file()}
-                logger.info(f"Read {len(id_to_source_item.values())} source items")
-                logger.info(f"IDs: {len(id_to_source_item.keys())}")
-                files_count = 0
-                for file in self.target_files:
-                    try:
-                        logger.info(f"Processing file: {file}")
-                        target_file_path = str(file)
-                        file_handler = TargetFileHandler(target_file_path)
-                        df = file_handler.read_file()
-                        logger.info(f"Read file: {file}")
 
-                        handled_rows_count = 0
-                        row_count = len(df)
-                        for idx, row in df.iterrows():
-                            id_value = row[reading_info.id_column_name]
-                            if id_value in id_to_source_item:
-                                for source_column in id_to_source_item[id_value].columns:
-                                    source_status = source_column.status
-                                    source_value = source_column.value
-                                    target_status = StatusEnum.search(row[source_column.status_name])
-                                    target_value = row[source_column.name]
-                                    if source_status.need_to_refresh(target_status) and source_value != target_value:
-                                        logger.info(
-                                            f'idx: {id_value}, {source_column.name}, source: {source_status, source_value}, target: {target_status, target_value}')
-                                        df.loc[idx, source_column.name] = source_value
-                                        df.loc[idx, source_column.status_name] = source_status.str_value
-                            handled_rows_count += 1
-                            row_percentage = 100 * (handled_rows_count / row_count)
-                            row_percentage_in_one_file_percent = row_percentage * 1/len(self.target_files)
-                            self.progress_bar.value = round(100 * (files_count / len(self.target_files)) + row_percentage_in_one_file_percent)
-                            print(
-                                f"From {row_count} handled {handled_rows_count} rows, percentage: {self.progress_bar.value}%"
-                            )
 
-                        file_handler.save_df()
-
-                        self.info_box.value += f"Обработан файл: {target_file_path}\n"
-                        logger.info(f"Finished processing file: {file}")
-                        files_count += 1
-                    except Exception as ex:
-                        self.info_box.value += f"В процессе обработки файла {target_file_path} произошла ошибка\n"
-                        logger.info(f"Finished processing file: {file} with exception: {ex}")
-                    self.progress_bar.value = round(100 * (files_count / len(self.target_files)))
-                    logger.info(
-                        f"From {len(self.target_files)} files handled {files_count} files, percentage: {self.progress_bar.value}%")
-                self.label.text = "Закончена обработка файлов"
-                self.progress_bar.value = 100
-                self.source_file = None
-                self.target_files = None
-                self.column_list.readonly = False
-                self.id_list.readonly = False
         else:
             await self.dialog(toga.InfoDialog("Внимание", "Не закончена обработка файла"))
             self.label.text = "Предупреждение: не закончена обработка предыдущего файла"
 
+    def update_progress(self, value):
+        self.loop.call_soon_threadsafe(self._set_progress, value)
+
+    def _set_progress(self, value):
+        self.progress_bar.value = value
+
+    def update_infobox(self, text):
+        self.loop.call_soon_threadsafe(self._update_infobox, text)
+
+    def _update_infobox(self, text):
+        self.info_box.value += text
+
+    def end_handle(self):
+        self.loop.call_soon_threadsafe(self._end_handle)
+
+    def _end_handle(self):
+        self.label.text = "Закончена обработка файлов"
+        self.progress_bar.value = 100
+        self.source_file = None
+        self.target_files = None
+        self.column_list.readonly = False
+        self.id_list.readonly = False
+        self.process_started = False
+
     async def select_file_source(self, widget):
-        if self.progress_bar.value in [0, 100]:
+        if not self.process_started:
             self.progress_bar.value = 0
             source_file_path = await self.dialog(
                 toga.OpenFileDialog("Choose a file")
@@ -264,7 +241,7 @@ class GuiApplication(toga.App):
             self.label.text = "Предупреждение: не закончена обработка предыдущего файла"
 
     async def select_target_files(self, widget):
-        if self.progress_bar.value in [0, 100]:
+        if not self.process_started:
             self.progress_bar.value = 0
             target_files_paths = await self.dialog(
                 toga.OpenFileDialog(
@@ -287,7 +264,7 @@ class GuiApplication(toga.App):
             self.label.text = "Предупреждение: не закончена обработка предыдущего файла"
 
     async def clear_paths(self, widget):
-        if self.progress_bar.value in [0, 100]:
+        if not self.process_started:
             self.source_file = None
             self.target_files = None
             self.info_box.value = ""
