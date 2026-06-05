@@ -1,5 +1,5 @@
 from source.application.file_handler import TargetFileHandler, SourceFileHandler
-from source.model.dto import ReadingInfo, StatusEnum, ColumnToRead, search
+from source.model.dto import ReadingInfo, ColumnToRead, search
 
 
 def merge_all(column_values: list[str],

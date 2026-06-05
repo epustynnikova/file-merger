@@ -253,7 +253,8 @@ class FileHandlerIntegrationTest(unittest.TestCase):
     def test_merge_xlsx_without_extra_file(self):
         # given:
         copy_target_file_path = get_file_source_path(os.path.join('file_merger', 'copy_integration_test_target.xlsx'))
-        shutil.copy(get_file_source_path(os.path.join('file_merger', 'integration_test_target.xlsx')), copy_target_file_path)
+        shutil.copy(get_file_source_path(os.path.join('file_merger', 'integration_test_target.xlsx')),
+                    copy_target_file_path)
         source_file_path = get_file_source_path(os.path.join('file_merger', 'integration_test_source.xlsx'))
         reading_info = ReadingInfo(
             id_column_name='ID Позиции Базы',
@@ -271,7 +272,6 @@ class FileHandlerIntegrationTest(unittest.TestCase):
         source_file_handler = SourceFileHandler(reading_info, source_file_path)
         source_items = source_file_handler.read_file()
         id_to_source_item = {source_item.id: source_item for source_item in source_items}
-
 
         # when:
         result = target_file_merger.merge(
@@ -504,7 +504,6 @@ class FileHandlerIntegrationTest(unittest.TestCase):
                 self.assertTrue(c.column_name in expected_values[c_value_saved != c_value][i])
 
         os.remove(real_saved_target_file_path)
-
 
     def test_merge_xlsb_without_extra_file(self):
         # given:
