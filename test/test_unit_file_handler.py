@@ -158,7 +158,7 @@ class FileHandler(unittest.TestCase):
                 'Направление': [StatusEnum.AROUND, 'Биохимия'],
                 'Прибор': [StatusEnum.CLASSIFICATOR, 'Cobas c'],
                 'Параметр': [StatusEnum.MANUAL, 'КАЛИБРАТОР ГЛИКОЗИЛИРОВАННОГО ГЕМОГЛОБИНА'],
-                'Артикул': [StatusEnum.CLASSIFICATOR, '4528417190']
+                'Артикул': [StatusEnum.CLASSIFICATOR, 4528417190]
             },
             'ORE_25_85612014915250000110000_0037': {
                 'Вид': [StatusEnum.MANUAL, 'Реагенты'],

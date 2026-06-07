@@ -18,7 +18,7 @@ class ExcelHandler:
 
     def read_file(self) -> pd.DataFrame:
         self.df = pd.read_excel(self.input_file.path,
-                                dtype=str,
+                                # dtype=str,
                                 keep_default_na=False,
                                 engine=self.input_file.type.open_lib)
         if self.input_file.type in [FileTypeEnum.XLSX, FileTypeEnum.XLS]:

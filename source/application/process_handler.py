@@ -51,8 +51,10 @@ def merge_all(column_values: list[str],
                         if source_status.need_to_refresh(target_status) and source_value != target_value:
                             logger.info(
                                 f'idx: {id_value}, {source_column.name}, source: {source_status, source_value}, target: {target_status, target_value}')
-                            df.loc[idx, source_column.name] = source_value
-                            df.loc[idx, source_column.status_name] = source_status.str_value
+                            value = df.loc[idx, source_column.name]
+                            status_value = df.loc[idx, source_column.status_name]
+                            df.loc[idx, source_column.name] = type(value)(source_value)
+                            df.loc[idx, source_column.status_name] = type(status_value)(source_status.str_value)
                 handled_rows_count += 1
                 row_percentage = handled_rows_count / row_count
                 row_percentage_in_one_file_percent = round(row_percentage * 100 / len(target_files))
