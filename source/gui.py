@@ -51,7 +51,9 @@ class GuiApplication(toga.App):
         )
 
         btn_app_info = toga.Button(
-            "Информация о приложении", style=btn_style
+            "Информация о приложении",
+            on_press=self.action_app_info_dialog,
+            style=btn_style
         )
 
         self.progress_bar = toga.ProgressBar(max=100, value=0)
@@ -301,6 +303,33 @@ class GuiApplication(toga.App):
     def exit(self, source_widget):
         App.exit(self)
 
+    async def action_app_info_dialog(self, widget):
+        await self.dialog(toga.InfoDialog(
+            title="Информация о приложении",
+            message="""
+            Эта программа объединяет Excel файлы по выбранным колонкам.
+            Текущая версия программы: 1.0.0
+
+
+            Особенности работы:
+            Программа объединяет информацию только из одного файла Excel, в несколько файлов Excel при наличии в них указанной пересекающейся колонки.
+            Выбор нескольких файлов осуществляется в диалоге выбора файла с зажатой клавишей Ctrl или протягиванием. 
+            Все требуемые файлы необходимо выбрать за один раз, в противном случае выбор перезаписывается.
+                
+            Версия Python 3.13.1 или выше.
+
+            Использованные библиотеки: 
+            pyinstaller
+            setuptools
+            numpy
+            pandas
+            toga
+            openpyxl
+            pyxlsb
+            pyxlsbwriter
+            spire.xls
+        """))
+        self.label.text = "Была предоставлена информация о приложении"
 
 app = GuiApplication(formal_name="Excel file merger", app_id="file.merger")
 app.main_loop()
