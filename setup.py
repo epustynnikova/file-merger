@@ -1,12 +1,16 @@
 from setuptools import setup
 
 setup(
-    name='file_merger',
+    name='source',
     version='0.0.1',
     packages=[
         '.source'
         '.source.application',
-        '.source.file_merger.model',
-        '.source.file_merger.application',
+        '.source.model',
+        '.source.model.dto',
+        '.source.application',
+        '.source.application.file_handler',
+        '.source.application.file_merger',
+        '.source.application.process_handler',
     ]
 )
