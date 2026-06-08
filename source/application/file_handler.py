@@ -10,6 +10,11 @@ from openpyxl.utils import get_column_letter
 from source.model.dto import ReadingInfo, SourceItem, SourceColumnData, InputFile, get_file_type, \
     FileTypeEnum, search
 
+def _get_temp_path(original_path: str) -> str:
+    directory = os.path.dirname(original_path)
+    filename = os.path.basename(original_path)
+    new_filename = f"temp_{filename}"
+    return str(os.path.join(directory, new_filename))
 
 class ExcelHandler:
     def __init__(self, input_file_path):
@@ -81,14 +86,16 @@ class ExcelHandler:
     def _save_xls_xlsx(self, file_name) -> str:
         wb = load_workbook(self.input_file.path)
         ws = wb.active
-        self.df.to_excel(file_name, index=False)
         for r_idx, row in self.df.iterrows():
             excel_row = r_idx + 2  # +2, т.к. pandas: 0 -> строка Excel 2 (если заголовок в строке 1)
             for c_idx, value in enumerate(row):
                 excel_col = c_idx + 1
                 cell = ws.cell(row=excel_row, column=excel_col)
                 cell.value = value  # стиль остаётся прежним
-        wb.save(file_name)
+        temp_file_name = _get_temp_path(file_name)
+        wb.save(temp_file_name)
+        os.remove(file_name)
+        os.rename(temp_file_name, file_name)
         return file_name
 
 
