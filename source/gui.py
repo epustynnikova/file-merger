@@ -319,15 +319,15 @@ class GuiApplication(toga.App):
             Версия Python 3.13.1 или выше.
 
             Использованные библиотеки: 
-            pyinstaller
-            setuptools
-            numpy
-            pandas
-            toga
-            openpyxl
-            pyxlsb
-            pyxlsbwriter
-            spire.xls
+            pyinstaller~=6.15.0
+            setuptools~=72.1.0
+            numpy~=2.2.3
+            pandas~=2.3.1
+            toga~=0.5.2
+            openpyxl~=3.1.5
+            pyxlsb~=1.0.10
+            pyxlsbwriter~=0.1.0
+            spire.xls~=16.5.0
         """))
         self.label.text = "Была предоставлена информация о приложении"
 
