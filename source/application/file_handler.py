@@ -94,7 +94,8 @@ class ExcelHandler:
                 cell.value = value  # стиль остаётся прежним
         temp_file_name = _get_temp_path(file_name)
         wb.save(temp_file_name)
-        os.remove(file_name)
+        if os.path.exists(file_name):
+            os.remove(file_name)
         os.rename(temp_file_name, file_name)
         return file_name
 
