@@ -12,7 +12,7 @@ def merge_all(column_values: list[str],
               end_handle_callback):
     center = len(column_values) // 2
     columns = []
-    for i in range(center + 1):
+    for i in range(center):
         columns.append(ColumnToRead(column_values[i], column_values[i + center]))
     reading_info = ReadingInfo(
         id_column_name=id_column,
