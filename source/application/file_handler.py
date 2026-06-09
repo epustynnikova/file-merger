@@ -100,6 +100,29 @@ class ExcelHandler:
         os.rename(temp_file_name, file_name)
         return file_name
 
+    # def _save_xls_xlsx_win(self, file_name) -> str:
+        # import win32com.client as win32
+        # excel = win32.gencache.EnsureDispatch('Excel.Application')
+        # excel.Visible = True
+        # workbook = excel.Workbooks.Open(self.input_file.path)
+        # sheet = workbook.ActiveSheet
+        # for r_idx, row in self.df.iterrows():
+        #     excel_row = r_idx + 2
+        #     for c_idx, value in enumerate(row):
+        #         excel_col = c_idx + 1
+        #         cell = sheet.Cells(row=excel_row, column=excel_col)
+        #         if cell.Value != value:
+        #             cell.Value = value
+        # temp_file_name = _get_temp_path(file_name)
+        # workbook.Close()
+        # excel.Quit()
+        # import gc
+        # gc.collect()
+        # if os.path.exists(file_name):
+        #     os.remove(file_name)
+        # os.rename(temp_file_name, file_name)
+        # return file_name
+
 
 class SourceFileHandler(ExcelHandler):
     def __init__(self, reading_info: ReadingInfo, input_file):
