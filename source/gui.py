@@ -7,6 +7,7 @@ from toga.style import Pack
 from toga.style.pack import COLUMN, ROW
 
 from source.application.process_handler import merge_all
+from source.application.property import read_properties, write_properties
 
 logging.basicConfig(filename=f'excel-file-merger.log',
                     level=logging.DEBUG)
@@ -17,10 +18,9 @@ class GuiApplication(toga.App):
 
     def __init__(self, formal_name, app_id):
         super().__init__(formal_name=formal_name, app_id=app_id)
-        self.id_list = None
-        self.column_list = None
-        self.id_column = None
-        self.column_value = None
+        self.reading_info_values = read_properties()
+        self.id_column_input = None
+        self.columns_list_input = None
         self.progress_bar = None
         self.label = None
         self.info_box = None
@@ -78,20 +78,16 @@ class GuiApplication(toga.App):
 
         label4 = toga.Label('Колонка ID:')
 
-        self.column_value = (
-            "Вид,Направление,Производитель,Прибор,Параметр,Артикул,Статус вид,Статус направление,Статус производитель,Статус прибор,Статус параметр,Статус артикул")
-
-        self.column_list = toga.MultilineTextInput(
-            value=self.column_value,
-            style=Pack(flex=1)
+        self.columns_list_input = toga.MultilineTextInput(
+            value=self.reading_info_values.get_columns_list_as_str(),
+            style=Pack(flex=1),
+            on_change=self._change_columns_list
         )
 
-        self.id_column = (
-            "ID Позиции Базы")
-
-        self.id_list = toga.MultilineTextInput(
-            value=self.id_column,
-            style=Pack(flex=1)
+        self.id_column_input = toga.MultilineTextInput(
+            value=self.reading_info_values.id_column_name,
+            style=Pack(flex=1),
+            on_change=self._change_id_column
         )
 
         btn_clear_paths = toga.Button(
@@ -134,14 +130,14 @@ class GuiApplication(toga.App):
         box.add(
             make_row(
                 label3.text,
-                self.column_list
+                self.columns_list_input
             )
         )
 
         box.add(
             make_row(
                 label4.text,
-                self.id_list
+                self.id_column_input
             )
         )
 
@@ -172,23 +168,18 @@ class GuiApplication(toga.App):
                 await self.dialog(toga.InfoDialog("Внимание", "Не выбраны целевые файлы"))
                 self.label.text = "Предупреждение: не выбраны целевые файлы"
             else:
-                self.column_list.readonly = True
-                self.id_list.readonly = True
-                column_value = [
-                    item.strip()
-                    for item in self.column_list.value.split(",")
-                    if item.strip()
-                ]
+                self.columns_list_input.readonly = True
+                self.id_column_input.readonly = True
                 self.label.text = "Запущена обработка"
-                self.info_box.value += f"ID колонка: ${self.id_column}\n"
-                self.info_box.value += f"Список колонок: ${column_value}\n"
+                self.info_box.value += f"ID колонка: ${self.reading_info_values.id_column_name}\n"
+                self.info_box.value += f"Список колонок: ${self.reading_info_values.columns_list}\n"
                 self.progress_bar.value = 0
                 self.process_started = True
 
                 await asyncio.to_thread(
                     merge_all,
-                    column_values=column_value,
-                    id_column=self.id_column,
+                    column_values=self.reading_info_values.columns_list,
+                    id_column=self.reading_info_values.id_column_name,
                     source_file_path=str(self.source_file),
                     target_files=[str(f) for f in self.target_files],
                     logger=logger,
@@ -222,9 +213,17 @@ class GuiApplication(toga.App):
         self.progress_bar.value = 100
         self.source_file = None
         self.target_files = None
-        self.column_list.readonly = False
-        self.id_list.readonly = False
+        self.columns_list_input.readonly = False
+        self.id_column_input.readonly = False
         self.process_started = False
+
+    async def _change_id_column(self, widget):
+        self.reading_info_values.id_column_name = widget.value
+        write_properties(self.reading_info_values)
+
+    async def _change_columns_list(self, widget):
+        self.reading_info_values.set_columns_list_from_str(widget.value)
+        write_properties(self.reading_info_values)
 
     async def select_file_source(self, widget):
         if not self.process_started:

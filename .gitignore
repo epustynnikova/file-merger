@@ -6,3 +6,4 @@ local_files/
 file_merger.egg-info/
 .idea
 **/__pycache__/
+**/properties.json

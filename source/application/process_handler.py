@@ -66,7 +66,6 @@ def merge_all(column_values: list[str],
                 print(
                     f"From {row_count} handled {handled_rows_count} rows, percentage: {percentage}%"
                 )
-
             infobox_callback(f"Cохраняется файл: {target_file_path}\n")
             file_handler.save_df()
             infobox_callback(f"Обработан файл: {target_file_path}\n")

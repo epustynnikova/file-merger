@@ -12,5 +12,6 @@ setup(
         '.source.application.file_handler',
         '.source.application.file_merger',
         '.source.application.process_handler',
+        '.source.application.property',
     ]
 )
