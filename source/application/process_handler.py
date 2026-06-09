@@ -53,7 +53,10 @@ def merge_all(column_values: list[str],
                                 f'idx: {id_value}, {source_column.name}, source: {source_status, source_value}, target: {target_status, target_value}')
                             value = df.loc[idx, source_column.name]
                             status_value = df.loc[idx, source_column.status_name]
-                            df.loc[idx, source_column.name] = type(value)(source_value)
+                            if source_value:
+                                df.loc[idx, source_column.name] = type(value)(source_value)
+                            else:
+                                df.loc[idx, source_column.name] = None
                             df.loc[idx, source_column.status_name] = type(status_value)(source_status.str_value)
                 handled_rows_count += 1
                 row_percentage = handled_rows_count / row_count
