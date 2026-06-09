@@ -84,14 +84,15 @@ class ExcelHandler:
         return file_name
 
     def _save_xls_xlsx(self, file_name) -> str:
-        wb = load_workbook(self.input_file.path)
+        wb = load_workbook(self.input_file.path, data_only=True)
         ws = wb.active
         for r_idx, row in self.df.iterrows():
             excel_row = r_idx + 2  # +2, т.к. pandas: 0 -> строка Excel 2 (если заголовок в строке 1)
             for c_idx, value in enumerate(row):
                 excel_col = c_idx + 1
                 cell = ws.cell(row=excel_row, column=excel_col)
-                cell.value = value  # стиль остаётся прежним
+                if cell.value != value:
+                    cell.value = value  # стиль остаётся прежним
         temp_file_name = _get_temp_path(file_name)
         wb.save(temp_file_name)
         if os.path.exists(file_name):
